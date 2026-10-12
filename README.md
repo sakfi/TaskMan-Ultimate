@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ TASKMAN ULTIMATE (PRO v2.0)
+# ⚡ TASKMAN ULTIMATE
 
 ### *Next-Gen Windows Telemetry & Advanced Process Forensics Workstation*
 
