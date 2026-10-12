@@ -1,3 +1,5 @@
+<div align="center">
+
 # ⚡ TASKMAN ULTIMATE (PRO v2.0)
 ### *Next-Gen Windows Telemetry & Advanced Process Forensics Workstation*
 
@@ -5,6 +7,8 @@
 [![Engine](https://img.shields.io/badge/Engine-Flutter%20Desktop%20%2B%20Win32%20FFI-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Status](https://img.shields.io/badge/Build-Passing%20(100%25%20Tests)-00E676?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/sakfi/TaskMan-Ultimate)
 [![License](https://img.shields.io/badge/License-MIT-FFB300?style=for-the-badge)](https://github.com/sakfi/TaskMan-Ultimate/blob/main/LICENSE)
+
+</div>
 
 ---
 
