@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "id": "com.tmog.console",
+  "name": "Default",
+  "author": "TMOG",
+  "description": "Six responsive readings paired across two columns when space allows.",
+  "symbol": "rectangle.split.2x1",
+
+  "quadrants": ["cpu", "gpu", "disk", "network", "memory", "thermal"],
+
+  "meters": {
+    "style": "rows",
+    "columns": 2,
+    "auxiliary": false,
+    "positionalPalette": false
+  },
+
+  "typography": {
+    "label": { "size": 10, "weight": "semibold" }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "id": "winamp",
+  "name": "Winamp",
+  "author": "TMOG",
+  "description": "Black display panels and green fixed-width readouts",
+  "symbol": "waveform",
+  "metrics": {
+    "cornerRadius": 0,
+    "headerBottomPadding": 5,
+    "headerGap": 3,
+    "tileCornerRadius": 0,
+    "badgeCornerRadius": 0
+  },
+  "surfaces": {
+    "window": { "gradient": ["#46424B", "#36323B"] },
+    "windowStroke": "#8F9199",
+    "header": { "gradient": ["#0F0E10", "#070607"] },
+    "headerRule": "#535159",
+    "tile": "#070607",
+    "tileStroke": "#535159",
+    "badgeStroke": "#535159"
+  },
+  "typography": {
+    "title": { "size": 11, "weight": "bold", "design": "monospaced" },
+    "titleTracking": 1.2,
+    "heading": { "size": 10, "weight": "bold", "design": "monospaced" },
+    "label": { "size": 9, "weight": "bold", "design": "monospaced" },
+    "value": { "size": 11, "weight": "bold", "design": "monospaced" },
+    "row": { "size": 10, "design": "monospaced" },
+    "rowValue": { "size": 10, "weight": "bold", "design": "monospaced" },
+    "auxLine": { "size": 9, "weight": "medium", "design": "monospaced" }
+  },
+  "ink": {
+    "title": "#E4DF6A",
+    "primary": "#E4DF6A",
+    "secondary": "#98873D",
+    "control": "#8F9199",
+    "badge": "#00C400",
+    "grip": "#8F9199",
+    "rule": "#535159"
+  },
+  "meters": {
+    "positionalPalette": true,
+    "channels": {
+      "cpu": { "accent": "#1AFF1C", "lit": "#1AFF1C", "unlit": "#3A363D8C" },
+      "memory": { "accent": "#E4DF6A", "lit": "#E4DF6A", "unlit": "#3A363D8C" },
+      "gpu": { "accent": "#00C400", "lit": "#00C400", "unlit": "#3A363D8C" },
+      "thermal": { "accent": "#E89A24", "lit": "#E89A24", "unlit": "#3A363D8C" },
+      "disk": { "accent": "#1AFF1C" },
+      "network": { "accent": "#E4DF6A" },
+      "power": { "accent": "#E4DF6A" },
+      "alert": { "accent": "#E89A24" }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "id": "mediaPlayer",
+  "name": "Windows Media Player",
+  "author": "TMOG",
+  "description": "Glossy blue chrome with white readouts",
+  "symbol": "play.rectangle",
+  "metrics": {
+    "cornerRadius": 10,
+    "headerBottomPadding": 6,
+    "headerGap": 2,
+    "tileCornerRadius": 6,
+    "badgeCornerRadius": 5
+  },
+  "surfaces": {
+    "window": { "gradient": ["#123A6E", "#04122B"] },
+    "windowStroke": "#8FBEF58C",
+    "header": { "gradient": ["#59A6EE", "#1B5FB2"] },
+    "headerRule": "#FFFFFF59",
+    "tile": { "gradient": ["#FFFFFF24", "#FFFFFF0A"] },
+    "tileStroke": "#FFFFFF38",
+    "tileGloss": { "gradient": ["#FFFFFF2E", "#FFFFFF00"] },
+    "badgeStroke": "#FFFFFF80"
+  },
+  "typography": { "titleTracking": 0.2 },
+  "ink": {
+    "title": "#FFFFFF",
+    "primary": "#FFFFFF",
+    "secondary": "#BFD8FFD9",
+    "control": "#FFFFFF",
+    "badge": "#FFFFFF",
+    "grip": "#FFFFFF8C",
+    "rule": "#FFFFFF2E"
+  },
+  "meters": {
+    "channels": {
+      "cpu": { "accent": "#8FE0FF", "lit": "#8FE0FF", "unlit": "#0B2946" },
+      "memory": { "accent": "#C0A8FF", "lit": "#C0A8FF", "unlit": "#1A1440" },
+      "gpu": { "accent": "#5FC8F5", "lit": "#5FC8F5", "unlit": "#07253A" },
+      "thermal": { "accent": "#FFC163", "lit": "#FFC163", "unlit": "#2E2008" },
+      "disk": { "accent": "#9BE8A0" },
+      "network": { "accent": "#8FE0FF" },
+      "power": { "accent": "#FFE082" },
+      "alert": { "accent": "#FF9A8F" }
+    }
+  }
+}

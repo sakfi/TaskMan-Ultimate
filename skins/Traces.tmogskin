@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "id": "com.tmog.traces",
+  "name": "Traces",
+  "author": "TMOG",
+  "description": "CPU, GPU and memory as scrolling history graphs rather than meters.",
+  "symbol": "waveform.path.ecg.rectangle",
+
+  "quadrants": ["cpu", "gpu", "memory"],
+
+  "metrics": {
+    "cornerRadius": 14,
+    "tileCornerRadius": 9,
+    "headerBottomPadding": 6,
+    "headerGap": 2
+  },
+
+  "surfaces": {
+    "window": { "gradient": ["#101418", "#05070A"] },
+    "windowStroke": "#43505C",
+    "header": { "gradient": ["#141A20", "#080C10"] },
+    "headerRule": "#43505C99",
+    "tile": "#070A0DE6",
+    "tileStroke": "#FFFFFF14",
+    "badgeStroke": "#4FD1C5AA"
+  },
+
+  "typography": {
+    "label": { "size": 9, "weight": "bold" },
+    "value": { "size": 12, "weight": "bold" },
+    "heading": { "size": 10, "weight": "semibold" }
+  },
+
+  "ink": {
+    "title": "#E6EDF3",
+    "primary": "#DCE6EF",
+    "secondary": "#7D8B99",
+    "control": "#C9D6E2",
+    "badge": "#4FD1C5",
+    "grip": "#7D8B99",
+    "rule": "#FFFFFF14"
+  },
+
+  "meters": {
+    "style": "graph",
+    "graph": { "showsGrid": true, "height": 44 },
+    "channels": {
+      "cpu":     { "accent": "#4FD1C5" },
+      "gpu":     { "accent": "#7FB2F0" },
+      "memory":  { "accent": "#D48CFF" },
+      "thermal": { "accent": "#FFB454" },
+      "disk":    { "accent": "#7BE08A" },
+      "network": { "accent": "#7FB2F0" },
+      "power":   { "accent": "#FFD166" },
+      "alert":   { "accent": "#FF7B72" }
+    }
+  }
+}

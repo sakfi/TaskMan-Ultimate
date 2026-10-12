@@ -1,0 +1,78 @@
+{
+  "format": 1,
+  "id": "com.tmog.wintaskman",
+  "name": "Windows Task Manager",
+  "author": "TMOG",
+  "description": "The classic look: grey 3D chrome, a navy title bar, etched boxes and green-on-black meters.",
+  "symbol": "display",
+
+  "metrics": {
+    "cornerRadius": 0,
+    "borderWidth": 1,
+    "padding": 6,
+    "headerBottomPadding": 4,
+    "headerGap": 6,
+    "sectionSpacing": 6,
+    "tileCornerRadius": 0,
+    "tileStrokeWidth": 1,
+    "badgeCornerRadius": 0
+  },
+
+  "header": {
+    "title": "Task Manager",
+    "logo": { "file": "taskman.png", "width": 16, "height": 16 }
+  },
+
+  "surfaces": {
+    "window": "#D4D0C8",
+    "windowStroke": "#000000",
+    "header": "#000080",
+    "headerRule": "#FFFFFF",
+    "tile": "#D4D0C8",
+    "tileStroke": "#808080",
+    "badgeStroke": "#808080"
+  },
+
+  "typography": {
+    "title": { "size": 11, "weight": "bold" },
+    "titleTracking": 0,
+    "heading": { "size": 10, "weight": "semibold" },
+    "label": { "size": 10 },
+    "value": { "size": 11 },
+    "row": { "size": 11 },
+    "rowValue": { "size": 11 },
+    "auxLine": { "size": 9 }
+  },
+
+  "ink": {
+    "title": "#FFFFFF",
+    "primary": "#000000",
+    "secondary": "#404040",
+    "control": "#FFFFFF",
+    "grip": "#FFFFFFAA",
+    "rule": "#808080"
+  },
+
+  "quadrants": ["cpu", "memory", "gpu", "thermal"],
+
+  "meters": {
+    "style": "vertical",
+    "auxiliary": false,
+    "positionalPalette": false,
+    "ground": "#000000",
+    "flat": true,
+    "split": 2,
+    "segments": 8,
+    "inset": { "top": 8, "bottom": 3, "leading": 10, "trailing": 10 },
+    "channels": {
+      "cpu":     { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "memory":  { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "gpu":     { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "thermal": { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "disk":    { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "network": { "accent": "#000000", "lit": "#00FF00", "unlit": "#006000" },
+      "power":   { "accent": "#000000" },
+      "alert":   { "accent": "#800000" }
+    }
+  }
+}
