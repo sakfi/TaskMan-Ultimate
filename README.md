@@ -8,6 +8,10 @@
 
 ---
 
+<p align="center">
+  <img src="assets/banner.svg" alt="TaskMan Ultimate Animated Banner" width="100%" />
+</p>
+
 ```
   ████████╗ █████╗ ███████╗██╗  ██╗███╗   ███╗ █████╗ ███╗   ██╗
   ╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝████╗ ████║██╔══██╗████╗  ██║
