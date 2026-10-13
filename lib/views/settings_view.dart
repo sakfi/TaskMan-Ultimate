@@ -1,6 +1,6 @@
-import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:ffi/ffi.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -65,14 +65,41 @@ class _SettingsViewState extends State<SettingsView> {
     return current;
   }
 
-  String _encodePowerShell(String script) {
-    final units = script.codeUnits;
-    final bytes = Uint8List(units.length * 2);
-    for (var i = 0; i < units.length; i++) {
-      bytes[i * 2] = units[i] & 0xFF;
-      bytes[i * 2 + 1] = (units[i] >> 8) & 0xFF;
+  static int _shellExecuteRunAs(String file, String params) {
+    if (!Platform.isWindows) return 0;
+    try {
+      final shell32 = DynamicLibrary.open('shell32.dll');
+      final shellExecute = shell32.lookupFunction<
+          Int32 Function(
+              IntPtr hwnd,
+              Pointer<Utf16> lpOperation,
+              Pointer<Utf16> lpFile,
+              Pointer<Utf16> lpParameters,
+              Pointer<Utf16> lpDirectory,
+              Int32 nShowCmd),
+          int Function(
+              int hwnd,
+              Pointer<Utf16> lpOperation,
+              Pointer<Utf16> lpFile,
+              Pointer<Utf16> lpParameters,
+              Pointer<Utf16> lpDirectory,
+              int nShowCmd)>('ShellExecuteW');
+
+      final opPtr = 'runas'.toNativeUtf16();
+      final filePtr = file.toNativeUtf16();
+      final paramsPtr = params.toNativeUtf16();
+
+      try {
+        return shellExecute(0, opPtr, filePtr, paramsPtr, nullptr, 0 /* SW_HIDE */);
+      } finally {
+        calloc.free(opPtr);
+        calloc.free(filePtr);
+        calloc.free(paramsPtr);
+      }
+    } catch (e) {
+      debugPrint('ShellExecute error: $e');
+      return 0;
     }
-    return base64.encode(bytes);
   }
 
   Future<void> _toggleReplaceTaskManager(bool enable) async {
@@ -93,13 +120,10 @@ class _SettingsViewState extends State<SettingsView> {
           '/f',
         ]);
         if (res.exitCode != 0) {
-          final escapedPath = exePath.replaceAll("'", "''");
-          final ps = "\$args = @('add', 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe', '/v', 'Debugger', '/t', 'REG_SZ', '/d', '$escapedPath', '/f'); Start-Process -FilePath 'reg.exe' -ArgumentList \$args -Verb RunAs -Wait";
-          await Process.run('powershell.exe', [
-            '-NoProfile',
-            '-EncodedCommand',
-            _encodePowerShell(ps),
-          ]);
+          _shellExecuteRunAs(
+            'cmd.exe',
+            '/c reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /t REG_SZ /d "$exePath" /f',
+          );
         }
       } else {
         var res = await Process.run('reg.exe', [
@@ -110,19 +134,21 @@ class _SettingsViewState extends State<SettingsView> {
           '/f',
         ]);
         if (res.exitCode != 0) {
-          final ps = "\$args = @('delete', 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe', '/v', 'Debugger', '/f'); Start-Process -FilePath 'reg.exe' -ArgumentList \$args -Verb RunAs -Wait";
-          await Process.run('powershell.exe', [
-            '-NoProfile',
-            '-EncodedCommand',
-            _encodePowerShell(ps),
-          ]);
+          _shellExecuteRunAs(
+            'cmd.exe',
+            '/c reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /f',
+          );
         }
       }
     } catch (e) {
       debugPrint('Error toggling Task Manager replacement: $e');
     }
 
-    await _checkDefaultTaskManager();
+    for (var i = 0; i < 6; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _checkDefaultTaskManager();
+      if (_isDefaultTaskManager == enable) break;
+    }
     if (mounted) {
       setState(() => _isBusyTaskManager = false);
       final success = _isDefaultTaskManager == enable;
