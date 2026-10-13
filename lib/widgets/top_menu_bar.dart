@@ -121,46 +121,6 @@ class TopMenuBar extends StatelessWidget {
               ),
             ],
           ),
-
-          const SizedBox(width: 4),
-
-          // Help Menu
-          DropDownButton(
-            title: Text('Help', style: TextStyle(color: skin.textPrimary, fontSize: 12)),
-            items: [
-              MenuFlyoutItem(
-                leading: const Icon(FluentIcons.info, size: 12),
-                text: const Text('About TaskMan Ultimate'),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ContentDialog(
-                      title: const Text('About TaskMan Ultimate'),
-                      content: const Text(
-                        'TaskMan Ultimate - Next-Generation System Monitor & Telemetry Suite.\n\n'
-                        'Created as a modern, high-performance Flutter desktop task manager for Windows.\n\n'
-                        'Features pure Win32 telemetry, automatic zero-config CPU (AMD Ryzen & Intel) and GPU thermal sensors, '
-                        'theme engine, 60s history buffers, and authentic retro segmented LED meters.',
-                      ),
-                      actions: [
-                        FilledButton(
-                          child: const Text('Awesome!'),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              MenuFlyoutItem(
-                leading: const Icon(FluentIcons.globe, size: 12),
-                text: const Text('Dave\'s Garage YouTube'),
-                onPressed: () {
-                  Process.run('cmd.exe', ['/c', 'start', 'https://www.youtube.com/@DavesGarage']);
-                },
-              ),
-            ],
-          ),
         ],
       ),
     );
