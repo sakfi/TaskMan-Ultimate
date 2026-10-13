@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -13,11 +14,14 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView> {
   bool _alwaysOnTop = false;
+  bool _isDefaultTaskManager = false;
+  bool _isBusyTaskManager = false;
 
   @override
   void initState() {
     super.initState();
     _checkAlwaysOnTop();
+    _checkDefaultTaskManager();
   }
 
   Future<void> _checkAlwaysOnTop() async {
@@ -28,6 +32,96 @@ class _SettingsViewState extends State<SettingsView> {
   void _toggleAlwaysOnTop(bool val) async {
     setState(() => _alwaysOnTop = val);
     await windowManager.setAlwaysOnTop(val);
+  }
+
+  Future<void> _checkDefaultTaskManager() async {
+    try {
+      final res = await Process.run('reg.exe', [
+        'query',
+        r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\taskmgr.exe',
+        '/v',
+        'Debugger',
+      ]);
+      if (mounted) {
+        final out = (res.stdout as String).toLowerCase();
+        setState(() {
+          _isDefaultTaskManager = res.exitCode == 0 && out.contains('taskman_ultimate');
+        });
+      }
+    } catch (_) {}
+  }
+
+  String _getTargetExePath() {
+    final current = Platform.resolvedExecutable;
+    if (current.toLowerCase().endsWith('taskman_ultimate.exe')) {
+      return current;
+    }
+    final releaseExe = File(r'build\windows\x64\runner\Release\taskman_ultimate.exe');
+    if (releaseExe.existsSync()) {
+      return releaseExe.absolute.path;
+    }
+    return current;
+  }
+
+  Future<void> _toggleReplaceTaskManager(bool enable) async {
+    setState(() => _isBusyTaskManager = true);
+    final exePath = _getTargetExePath();
+
+    try {
+      if (enable) {
+        var res = await Process.run('reg.exe', [
+          'add',
+          r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\taskmgr.exe',
+          '/v',
+          'Debugger',
+          '/t',
+          'REG_SZ',
+          '/d',
+          exePath,
+          '/f',
+        ]);
+        if (res.exitCode != 0) {
+          await Process.run('powershell.exe', [
+            '-Command',
+            'Start-Process reg.exe -ArgumentList "add \\"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe\\" /v Debugger /t REG_SZ /d \\"$exePath\\" /f" -Verb RunAs -Wait',
+          ]);
+        }
+      } else {
+        var res = await Process.run('reg.exe', [
+          'delete',
+          r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\taskmgr.exe',
+          '/v',
+          'Debugger',
+          '/f',
+        ]);
+        if (res.exitCode != 0) {
+          await Process.run('powershell.exe', [
+            '-Command',
+            'Start-Process reg.exe -ArgumentList "delete \\"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe\\" /v Debugger /f" -Verb RunAs -Wait',
+          ]);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error toggling Task Manager replacement: $e');
+    }
+
+    await _checkDefaultTaskManager();
+    if (mounted) {
+      setState(() => _isBusyTaskManager = false);
+      displayInfoBar(
+        context,
+        builder: (context, close) => InfoBar(
+          title: Text(_isDefaultTaskManager
+              ? 'TaskMan Ultimate is now Default!'
+              : 'Default Task Manager Restored'),
+          content: Text(_isDefaultTaskManager
+              ? 'Pressing Ctrl+Shift+Esc or taskbar clicks will now launch TaskMan Ultimate.'
+              : 'Standard Windows Task Manager restored.'),
+          severity: _isDefaultTaskManager ? InfoBarSeverity.success : InfoBarSeverity.info,
+          onClose: close,
+        ),
+      );
+    }
   }
 
   @override
@@ -179,6 +273,99 @@ class _SettingsViewState extends State<SettingsView> {
                     content: Text('Warn when CPU utilization exceeds 95% (Sustained Workload Spike)',
                         style: TextStyle(color: skin.textPrimary, fontSize: 13)),
                   ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Windows Shell & Task Manager Integration
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: skin.tileBackground,
+                borderRadius: BorderRadius.circular(skin.cornerRadius),
+                border: Border.all(color: skin.windowStroke),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(FluentIcons.task_manager, size: 16, color: skin.textAccent),
+                      const SizedBox(width: 8),
+                      Text(
+                        'WINDOWS SHELL INTEGRATION',
+                        style: TextStyle(color: skin.textPrimary, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.8),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Configure system-wide hotkeys and replace default Windows utilities with TaskMan Ultimate.',
+                    style: TextStyle(color: skin.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Replace Default Windows Task Manager',
+                              style: TextStyle(color: skin.textPrimary, fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Overrides taskmgr.exe via Image File Execution Options (IFEO). Pressing Ctrl+Shift+Esc, Ctrl+Alt+Del, or right-clicking the taskbar will automatically launch TaskMan Ultimate.',
+                              style: TextStyle(color: skin.textSecondary, fontSize: 11.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      if (_isBusyTaskManager)
+                        const ProgressRing(strokeWidth: 2)
+                      else
+                        ToggleSwitch(
+                          checked: _isDefaultTaskManager,
+                          onChanged: _toggleReplaceTaskManager,
+                          content: Text(
+                            _isDefaultTaskManager ? 'Enabled' : 'Disabled',
+                            style: TextStyle(
+                              color: _isDefaultTaskManager ? skin.textAccent : skin.textSecondary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (_isDefaultTaskManager) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: skin.windowBackground.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: skin.textAccent.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(FluentIcons.completed, size: 14, color: skin.textAccent),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'TaskMan Ultimate is active as your primary Windows Task Manager (Ctrl+Shift+Esc hook armed).',
+                              style: TextStyle(fontSize: 11.5, color: skin.textPrimary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
