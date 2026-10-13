@@ -179,7 +179,7 @@ flutter build windows
 
 TaskMan Ultimate includes comprehensive unit, service, and widget test coverage:
 
-* **100% Passing Test Suite**: 12/12 unit and widget tests passing.
+* **100% Passing Test Suite**: 13/13 unit and widget tests passing.
 * **0 Analysis Warnings**: Verified with `dart analyze`.
 * **Zero Runtime Leaks**: Fully isolated process execution checks.
 
@@ -194,23 +194,23 @@ dart analyze
 
 Distributed under the **MIT License**. Free for personal, commercial, and enthusiast use.
 
-<<<<<<< HEAD
+---
 
-=======
->>>>>>> bcf535b (docs(readme): polish formatting, remove ASCII art, add support & connect sections)
+## 📦 Downloads & Installation
+
+You can get TaskMan Ultimate via:
+* **Automated Installer**: Download `TaskMan-Ultimate-Setup-v2.0.exe` from the latest [GitHub Releases](https://github.com/sakfi/TaskMan-Ultimate/releases).
+* **Portable Package**: Download `TaskMan-Ultimate-Portable-v2.0.zip`, extract anywhere, and launch `taskman_ultimate.exe`.
+* **GitHub Actions Builds**: Pre-release builds and installer artifacts are automatically produced on every push under [Actions](https://github.com/sakfi/TaskMan-Ultimate/actions).
+
+---
+
 ## 💬 Support
 
 If you encounter any issues or need help, feel free to:
 
-<br>
-
-<<<<<<< HEAD
-- 🐛 Open an issue in this repository
-- 💬 Reach out to me directly
-=======
 * 🐛 Open an issue in this repository
 * 💬 Reach out to me directly
->>>>>>> bcf535b (docs(readme): polish formatting, remove ASCII art, add support & connect sections)
 
 <br>
 
