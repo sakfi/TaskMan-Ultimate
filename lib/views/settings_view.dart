@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -63,6 +65,16 @@ class _SettingsViewState extends State<SettingsView> {
     return current;
   }
 
+  String _encodePowerShell(String script) {
+    final units = script.codeUnits;
+    final bytes = Uint8List(units.length * 2);
+    for (var i = 0; i < units.length; i++) {
+      bytes[i * 2] = units[i] & 0xFF;
+      bytes[i * 2 + 1] = (units[i] >> 8) & 0xFF;
+    }
+    return base64.encode(bytes);
+  }
+
   Future<void> _toggleReplaceTaskManager(bool enable) async {
     setState(() => _isBusyTaskManager = true);
     final exePath = _getTargetExePath();
@@ -81,9 +93,12 @@ class _SettingsViewState extends State<SettingsView> {
           '/f',
         ]);
         if (res.exitCode != 0) {
+          final escapedPath = exePath.replaceAll("'", "''");
+          final ps = "\$args = @('add', 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe', '/v', 'Debugger', '/t', 'REG_SZ', '/d', '$escapedPath', '/f'); Start-Process -FilePath 'reg.exe' -ArgumentList \$args -Verb RunAs -Wait";
           await Process.run('powershell.exe', [
-            '-Command',
-            'Start-Process reg.exe -ArgumentList "add \\"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe\\" /v Debugger /t REG_SZ /d \\"$exePath\\" /f" -Verb RunAs -Wait',
+            '-NoProfile',
+            '-EncodedCommand',
+            _encodePowerShell(ps),
           ]);
         }
       } else {
@@ -95,9 +110,11 @@ class _SettingsViewState extends State<SettingsView> {
           '/f',
         ]);
         if (res.exitCode != 0) {
+          final ps = "\$args = @('delete', 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe', '/v', 'Debugger', '/f'); Start-Process -FilePath 'reg.exe' -ArgumentList \$args -Verb RunAs -Wait";
           await Process.run('powershell.exe', [
-            '-Command',
-            'Start-Process reg.exe -ArgumentList "delete \\"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe\\" /v Debugger /f" -Verb RunAs -Wait',
+            '-NoProfile',
+            '-EncodedCommand',
+            _encodePowerShell(ps),
           ]);
         }
       }
@@ -108,19 +125,34 @@ class _SettingsViewState extends State<SettingsView> {
     await _checkDefaultTaskManager();
     if (mounted) {
       setState(() => _isBusyTaskManager = false);
-      displayInfoBar(
-        context,
-        builder: (context, close) => InfoBar(
-          title: Text(_isDefaultTaskManager
-              ? 'TaskMan Ultimate is now Default!'
-              : 'Default Task Manager Restored'),
-          content: Text(_isDefaultTaskManager
-              ? 'Pressing Ctrl+Shift+Esc or taskbar clicks will now launch TaskMan Ultimate.'
-              : 'Standard Windows Task Manager restored.'),
-          severity: _isDefaultTaskManager ? InfoBarSeverity.success : InfoBarSeverity.info,
-          onClose: close,
-        ),
-      );
+      final success = _isDefaultTaskManager == enable;
+      if (success) {
+        displayInfoBar(
+          context,
+          builder: (context, close) => InfoBar(
+            title: Text(enable
+                ? 'TaskMan Ultimate is now Default!'
+                : 'Default Task Manager Restored'),
+            content: Text(enable
+                ? 'Pressing Ctrl+Shift+Esc or taskbar clicks will now launch TaskMan Ultimate.'
+                : 'Standard Windows Task Manager restored for Ctrl+Shift+Esc.'),
+            severity: InfoBarSeverity.success,
+            onClose: close,
+          ),
+        );
+      } else {
+        displayInfoBar(
+          context,
+          builder: (context, close) => InfoBar(
+            title: const Text('Administrator Permission Required'),
+            content: const Text(
+              'Windows requires Administrator approval (UAC) to modify the Task Manager registry hook. Please click "Yes" when the Windows prompt appears.',
+            ),
+            severity: InfoBarSeverity.warning,
+            onClose: close,
+          ),
+        );
+      }
     }
   }
 
