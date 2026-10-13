@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'providers/taskman_provider.dart';
+import 'views/about_view.dart';
 import 'views/app_history_view.dart';
 import 'views/benchmarks_view.dart';
 import 'views/connections_view.dart';
@@ -279,6 +280,12 @@ class _MainShellState extends State<MainShell> {
                     ),
                   ],
                   footerItems: [
+                    PaneItemSeparator(),
+                    PaneItem(
+                      icon: const Icon(FluentIcons.info),
+                      title: const Text('About'),
+                      body: const AboutView(),
+                    ),
                     // Glowing TaskMan neon logo
                     PaneItemHeader(
                       header: const Padding(
