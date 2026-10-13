@@ -8,6 +8,7 @@ import 'package:taskman_ultimate/views/about_view.dart';
 void main() {
   testWidgets('TaskManApp renders main navigation', (WidgetTester tester) async {
     final provider = TaskManProvider();
+    if (!provider.isPaused) provider.togglePause();
     await tester.pumpWidget(
       ChangeNotifierProvider<TaskManProvider>.value(
         value: provider,
@@ -24,6 +25,7 @@ void main() {
 
   testWidgets('AboutView renders branding and developer credits', (WidgetTester tester) async {
     final provider = TaskManProvider();
+    if (!provider.isPaused) provider.togglePause();
     await tester.pumpWidget(
       ChangeNotifierProvider<TaskManProvider>.value(
         value: provider,

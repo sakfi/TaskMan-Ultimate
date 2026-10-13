@@ -121,8 +121,8 @@ class _SettingsViewState extends State<SettingsView> {
         ]);
         if (res.exitCode != 0) {
           _shellExecuteRunAs(
-            'cmd.exe',
-            '/c reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /t REG_SZ /d "$exePath" /f',
+            'reg.exe',
+            'add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /t REG_SZ /d "$exePath" /f',
           );
         }
       } else {
@@ -135,8 +135,8 @@ class _SettingsViewState extends State<SettingsView> {
         ]);
         if (res.exitCode != 0) {
           _shellExecuteRunAs(
-            'cmd.exe',
-            '/c reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /f',
+            'reg.exe',
+            'delete "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\taskmgr.exe" /v Debugger /f',
           );
         }
       }
@@ -144,7 +144,7 @@ class _SettingsViewState extends State<SettingsView> {
       debugPrint('Error toggling Task Manager replacement: $e');
     }
 
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 15; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
       await _checkDefaultTaskManager();
       if (_isDefaultTaskManager == enable) break;
