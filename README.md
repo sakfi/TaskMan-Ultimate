@@ -194,15 +194,23 @@ dart analyze
 
 Distributed under the **MIT License**. Free for personal, commercial, and enthusiast use.
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> bcf535b (docs(readme): polish formatting, remove ASCII art, add support & connect sections)
 ## 💬 Support
 
 If you encounter any issues or need help, feel free to:
 
 <br>
 
+<<<<<<< HEAD
 - 🐛 Open an issue in this repository
 - 💬 Reach out to me directly
+=======
+* 🐛 Open an issue in this repository
+* 💬 Reach out to me directly
+>>>>>>> bcf535b (docs(readme): polish formatting, remove ASCII art, add support & connect sections)
 
 <br>
 
