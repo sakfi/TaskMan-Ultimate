@@ -39,8 +39,11 @@ class _PowerFreqViewState extends State<PowerFreqView> {
     final thermals = metrics?.thermals;
     final cpuTemp = thermals?.cpuTemperature ?? 41.0;
     final isThrottling = thermals?.isCpuThrottling ?? false;
-    // Estimated frequency calculation based on CPU load (base 3.2 GHz up to 5.4 GHz)
-    final estFreq = (3.2 + (cpuPercent / 100.0) * 1.8).toStringAsFixed(2);
+
+    final baseSpeed = thermals?.cpuBaseClockGhz ?? 2.50;
+    final maxTurbo = thermals?.cpuMaxTurboGhz ?? 4.50;
+    final currentClock = thermals?.cpuCurrentClockGhz ?? (baseSpeed * (0.8 + (cpuPercent / 100.0) * 0.5));
+    final estFreq = currentClock.toStringAsFixed(2);
     final batteryPct = power?.batteryPercent ?? -1;
 
     return ScaffoldPage(
@@ -99,9 +102,9 @@ class _PowerFreqViewState extends State<PowerFreqView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Base Speed: 3.20 GHz', style: TextStyle(color: skin.textSecondary, fontSize: 12)),
+                            Text('Base Speed: ${baseSpeed.toStringAsFixed(2)} GHz', style: TextStyle(color: skin.textSecondary, fontSize: 12)),
                             const SizedBox(height: 4),
-                            Text('Max Turbo Frequency: 5.40 GHz', style: TextStyle(color: skin.textSecondary, fontSize: 12)),
+                            Text('Max Turbo Frequency: ${maxTurbo.toStringAsFixed(2)} GHz', style: TextStyle(color: skin.textSecondary, fontSize: 12)),
                             const SizedBox(height: 4),
                             Text(
                               isThrottling
@@ -123,7 +126,7 @@ class _PowerFreqViewState extends State<PowerFreqView> {
                             Text('Current Clock Load:', style: TextStyle(color: skin.textSecondary, fontSize: 12)),
                             const SizedBox(height: 6),
                             SegmentedMeter(
-                              value: (((double.tryParse(estFreq) ?? 3.2) / 5.4) * 100).clamp(0.0, 100.0),
+                              value: ((currentClock / maxTurbo) * 100).clamp(0.0, 100.0),
                               segments: 24,
                               height: 16,
                               channelColor: skin.getChannel('cpu'),

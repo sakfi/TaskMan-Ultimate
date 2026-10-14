@@ -771,7 +771,7 @@ class SystemExtendedService {
     String osName = 'Microsoft Windows 11 Pro 64-bit';
     String osVersion = '23H2 (Build 22631)';
     String osBuild = '22631.4169';
-    String procName = 'AMD Ryzen 7 5700X 8-Core Processor';
+    String procName = Platform.environment['PROCESSOR_IDENTIFIER'] ?? 'x64 Family Processor';
     String arch = 'x64 (64-bit)';
     int logical = Platform.numberOfProcessors;
     int physical = max(1, logical ~/ 2);
