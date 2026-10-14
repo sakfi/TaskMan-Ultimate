@@ -38,8 +38,15 @@ jobs:
           } elseif ($env:GITHUB_REF.StartsWith('refs/tags/')) {
             $tag = $env:GITHUB_REF.Substring(10)
           } else {
-            $tag = "v2.0.0"
+            $tag = "v2.0.1"
           }
+
+          # Clean numerical version for Windows binaries & Inno Setup
+          $cleanVersion = $tag.TrimStart('v').Trim()
+          if (-not $cleanVersion) { $cleanVersion = "2.0.1" }
+
+          $setupBaseName = "TaskMan-Ultimate-Setup-$tag"
+          $portableBaseName = "TaskMan-Ultimate-Portable-$tag"
 
           if ($manualTitle) {
             $title = $manualTitle
@@ -48,8 +55,15 @@ jobs:
           }
 
           Write-Host "Target Tag: $tag"
+          Write-Host "Clean Version: $cleanVersion"
+          Write-Host "Setup File: $setupBaseName.exe"
+          Write-Host "Portable File: $portableBaseName.zip"
           Write-Host "Target Title: $title"
+
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "clean_version=$cleanVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "setup_basename=$setupBaseName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "portable_basename=$portableBaseName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "title=$title" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Setup Flutter
@@ -72,21 +86,26 @@ jobs:
         run: flutter test
 
       - name: Build Flutter Windows Application (Release)
-        run: flutter build windows --release
+        run: flutter build windows --release --build-name=${{ steps.release_info.outputs.clean_version }}
 
       - name: Compile Inno Setup Installer
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "build\installer"
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" windows/installer/taskman_ultimate_setup.iss
+          $cleanVer = "${{ steps.release_info.outputs.clean_version }}"
+          $setupName = "${{ steps.release_info.outputs.setup_basename }}"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="$cleanVer" /DOutputBaseFilename="$setupName" windows/installer/taskman_ultimate_setup.iss
 
       - name: Package Portable Zip Archive
+        shell: pwsh
         run: |
-          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "build\installer\TaskMan-Ultimate-Portable-v2.0.zip" -Force
+          $portablePath = "build\installer\${{ steps.release_info.outputs.portable_basename }}.zip"
+          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath $portablePath -Force
 
       - name: Upload GitHub Actions Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: TaskMan-Ultimate-Windows
+          name: TaskMan-Ultimate-${{ steps.release_info.outputs.tag }}
           path: build/installer/*
           if-no-files-found: error
           retention-days: 30
@@ -97,8 +116,8 @@ jobs:
           tag_name: ${{ steps.release_info.outputs.tag }}
           name: ${{ steps.release_info.outputs.title }}
           files: |
-            build/installer/TaskMan-Ultimate-Setup-v2.0.exe
-            build/installer/TaskMan-Ultimate-Portable-v2.0.zip
+            build/installer/${{ steps.release_info.outputs.setup_basename }}.exe
+            build/installer/${{ steps.release_info.outputs.portable_basename }}.zip
           generate_release_notes: true
           draft: false
           prerelease: false

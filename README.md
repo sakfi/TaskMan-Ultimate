@@ -8,7 +8,7 @@
 [![Engine](https://img.shields.io/badge/Engine-Flutter%20Desktop%20%2B%20Win32%20FFI-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Status](https://img.shields.io/badge/Tests-13%2F13%20Passing%20(100%25)-00E676?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/sakfi/TaskMan-Ultimate/actions)
 [![Analysis](https://img.shields.io/badge/Analyzer-0%20Issues-brightgreen?style=for-the-badge&logo=dart)](https://github.com/sakfi/TaskMan-Ultimate)
-[![Release](https://img.shields.io/badge/Release-v2.0.0-9C27B0?style=for-the-badge&logo=github)](https://github.com/sakfi/TaskMan-Ultimate/releases)
+[![Release](https://img.shields.io/github/v/release/sakfi/TaskMan-Ultimate?style=for-the-badge&logo=github&color=9C27B0&label=Release)](https://github.com/sakfi/TaskMan-Ultimate/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-FFB300?style=for-the-badge)](https://github.com/sakfi/TaskMan-Ultimate/blob/main/LICENSE)
 
 </div>
@@ -164,8 +164,8 @@ flowchart TD
 | **Windows Setup Wizard** | `.exe` | Full Inno Setup installer with Start Menu, Desktop shortcuts, and uninstaller. | Windows 10/11 x64 |
 | **Portable Package** | `.zip` | Zero-install standalone directory. Extract and launch `taskman_ultimate.exe`. | Windows 10/11 x64 |
 
-* **Latest Release**: Download from [GitHub Releases](https://github.com/sakfi/TaskMan-Ultimate/releases).
-* **Continuous Integration**: Automated test and build artifacts generated on every push under [GitHub Actions](https://github.com/sakfi/TaskMan-Ultimate/actions).
+* **Latest Release**: Download from [GitHub Releases](https://github.com/sakfi/TaskMan-Ultimate/releases/latest).
+* **Continuous Integration**: Manual build dispatch and artifact compilation available under [GitHub Actions](https://github.com/sakfi/TaskMan-Ultimate/actions).
 
 ---
 
@@ -199,7 +199,7 @@ flutter run -d windows
 flutter build windows
 
 # 7. (Optional) Build Inno Setup Installer
-iscc /DAppVersion="2.0.0" windows/installer/taskman_ultimate_setup.iss
+iscc /DMyAppVersion="2.0.1" windows/installer/taskman_ultimate_setup.iss
 ```
 
 ---
@@ -209,7 +209,7 @@ iscc /DAppVersion="2.0.0" windows/installer/taskman_ultimate_setup.iss
 TaskMan Ultimate includes a fully automated GitHub Actions pipeline (`.github/workflows/build-installer.yml`):
 
 * **Automated Builds**: Runs Flutter tests, executes `flutter build windows`, and compiles the Inno Setup installer.
-* **Manual Tagging & Releases**: Includes `workflow_dispatch` trigger allowing you to input a custom `release_tag` (e.g. `v2.0.0`) and `release_title` directly in the GitHub Actions UI to automatically draft and publish releases with attached `.exe` and `.zip` binaries.
+* **Manual Tagging & Releases**: Includes `workflow_dispatch` trigger allowing you to input a custom `release_tag` (e.g. `v2.0.1`) and `release_title` directly in the GitHub Actions UI to automatically draft and publish releases with dynamically named `.exe` and `.zip` binaries.
 
 ---
 

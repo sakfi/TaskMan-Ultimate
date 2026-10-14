@@ -2,10 +2,16 @@
 ; Inno Setup 6 Script
 
 #define MyAppName "TaskMan Ultimate"
-#define MyAppVersion "2.0.0"
+#ifndef MyAppVersion
+#define MyAppVersion "2.0.1"
+#endif
 #define MyAppPublisher "SakFi"
 #define MyAppURL "https://github.com/sakfi/TaskMan-Ultimate"
 #define MyAppExeName "taskman_ultimate.exe"
+
+#ifndef OutputBaseFilename
+#define OutputBaseFilename "TaskMan-Ultimate-Setup-" + MyAppVersion
+#endif
 
 [Setup]
 AppId={{D37D19A2-3A6B-4C94-817B-7F0D8E9A12BC}
@@ -21,7 +27,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
 OutputDir=..\..\build\installer
-OutputBaseFilename=TaskMan-Ultimate-Setup-v2.0
+OutputBaseFilename={#OutputBaseFilename}
 SetupIconFile=..\runner\resources\app_icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
