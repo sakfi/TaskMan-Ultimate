@@ -172,6 +172,7 @@ flowchart TD
 ## 🚀 Building From Source
 
 ### Prerequisites
+
 * **Windows 10 / 11 (64-bit)**
 * **Flutter SDK (>= 3.24.0)**
 * **Visual Studio 2022** with Desktop development with C++
