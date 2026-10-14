@@ -66,13 +66,13 @@ jobs:
           retention-days: 30
 
       - name: Publish to GitHub Releases
-        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v2.0.0' }}
+          name: TaskMan Ultimate ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v2.0.0' }}
           files: |
             build/installer/TaskMan-Ultimate-Setup-v2.0.exe
             build/installer/TaskMan-Ultimate-Portable-v2.0.zip
-          name: TaskMan Ultimate ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
