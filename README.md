@@ -266,8 +266,4 @@ If you encounter any issues or have feature requests:
 
 <br>
 
-<p align="center">
-  <img src="https://komarev.com/ghpvc/?username=sakfi&label=Profile%20Views&color=ff007f&style=for-the-badge" alt="sakfi" />
-</p>
-
 </div>
