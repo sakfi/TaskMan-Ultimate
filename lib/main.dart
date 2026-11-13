@@ -12,6 +12,7 @@ import 'views/details_view.dart';
 import 'views/disk_space_view.dart';
 import 'views/drivers_view.dart';
 import 'views/flight_recorder_view.dart';
+import 'views/gpu_inspector_view.dart';
 import 'views/installed_apps_view.dart';
 import 'views/performance_view.dart';
 import 'views/power_freq_view.dart';
@@ -172,7 +173,13 @@ class _MainShellState extends State<MainShell> {
                       title: const Text('Processes'),
                       body: const ProcessesView(),
                     ),
-                    // 4. App History
+                    // 4. GPU Inspector (WDDM + AI/VRAM)
+                    PaneItem(
+                      icon: const Icon(FluentIcons.processing),
+                      title: const Text('GPU inspector'),
+                      body: const GpuInspectorView(),
+                    ),
+                    // 5. App History
                     PaneItem(
                       icon: const Icon(FluentIcons.history),
                       title: const Text('App history'),

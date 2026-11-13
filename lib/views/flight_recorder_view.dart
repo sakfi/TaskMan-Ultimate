@@ -53,6 +53,24 @@ class _FlightRecorderViewState extends State<FlightRecorderView> {
     }
   }
 
+  void _exportJsonl() async {
+    final jsonlStr = _service.generateTelemetryJsonl();
+    final file = File('flight_recorder_dump.jsonl');
+    await file.writeAsString(jsonlStr);
+
+    if (mounted) {
+      displayInfoBar(
+        context,
+        builder: (context, close) => InfoBar(
+          title: const Text('Export JSONL Complete'),
+          content: Text('Saved ${_service.flightRecorderLogs.length} events to ${file.absolute.path}'),
+          severity: InfoBarSeverity.success,
+          onClose: close,
+        ),
+      );
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _service.flightRecorderLogs.clear();
@@ -149,6 +167,18 @@ class _FlightRecorderViewState extends State<FlightRecorderView> {
             ),
             const SizedBox(width: 8),
             Button(
+              onPressed: _exportJsonl,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(FluentIcons.code, size: 14),
+                  SizedBox(width: 6),
+                  Text('Export JSONL'),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
               onPressed: _clearLogs,
               child: const Text('Clear'),
             ),
@@ -240,9 +270,11 @@ class _FlightRecorderViewState extends State<FlightRecorderView> {
                                 style: TextStyle(color: skin.cpuColor, fontWeight: FontWeight.bold, fontSize: 12)),
                             Text('RAM: ${inspectedSnapshot.memoryPercent.toStringAsFixed(1)}%',
                                 style: TextStyle(color: skin.memoryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                            Text('GPU: ${inspectedSnapshot.gpuPercent.toStringAsFixed(1)}% (${(inspectedSnapshot.gpuVramMB / 1024).toStringAsFixed(1)} GB)',
+                                style: TextStyle(color: skin.getChannel('gpu').accent, fontWeight: FontWeight.bold, fontSize: 12)),
                             Text('Disk: ${inspectedSnapshot.diskMBs.toStringAsFixed(1)} MB/s',
                                 style: TextStyle(color: skin.diskColor, fontWeight: FontWeight.bold, fontSize: 12)),
-                            Text('Top Process: ${inspectedSnapshot.topProcessName} (${inspectedSnapshot.topProcessCpu.toStringAsFixed(1)}%)',
+                            Text('Top: ${inspectedSnapshot.topProcessName} (${inspectedSnapshot.topProcessCpu.toStringAsFixed(1)}%)',
                                 style: TextStyle(color: skin.textPrimary, fontWeight: FontWeight.bold, fontSize: 12)),
                           ],
                         ),
@@ -268,6 +300,7 @@ class _FlightRecorderViewState extends State<FlightRecorderView> {
                   Expanded(flex: 3, child: Text('Timestamp', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
                   Expanded(flex: 2, child: Text('CPU %', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
                   Expanded(flex: 2, child: Text('Memory %', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
+                  Expanded(flex: 2, child: Text('GPU / VRAM', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
                   Expanded(flex: 2, child: Text('Disk (MB/s)', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
                   Expanded(flex: 3, child: Text('Top Process', style: TextStyle(color: skin.textSecondary, fontWeight: FontWeight.bold, fontSize: 12))),
                 ],
@@ -329,6 +362,13 @@ class _FlightRecorderViewState extends State<FlightRecorderView> {
                                   child: Text(
                                     '${event.memoryPercent.toStringAsFixed(1)}%',
                                     style: TextStyle(color: skin.memoryColor, fontSize: 12),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    '${event.gpuPercent.toStringAsFixed(0)}% / ${(event.gpuVramMB / 1024).toStringAsFixed(1)}G',
+                                    style: TextStyle(color: skin.getChannel('gpu').accent, fontSize: 12),
                                   ),
                                 ),
                                 Expanded(

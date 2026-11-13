@@ -90,6 +90,19 @@ class ThermalTelemetryService {
     _isQueryingGpu = false;
   }
 
+  /// Updates fallback GPU utilization and adapter model from WDDM PDH/DXGI
+  /// when NVIDIA SMI is unavailable (e.g., AMD or Intel GPUs).
+  void updateWddmGpuFallback({String? model, double? utilization}) {
+    if (!_isNvidiaGpu) {
+      if (model != null && model.isNotEmpty) {
+        _gpuModel = model;
+      }
+      if (utilization != null) {
+        _currentGpuUtil = utilization.clamp(0.0, 100.0);
+      }
+    }
+  }
+
   void _detectHardwareInfo() {
     if (!Platform.isWindows) return;
 

@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
+import 'gpu_taskman_service.dart';
 import 'thermal_telemetry_service.dart';
 
 // Priority class constants
@@ -32,6 +33,14 @@ class ProcessInfo {
   final int memoryBytes;
   final double cpuPercent;
   final int priorityClass;
+  final int gpuDedicatedBytes;
+  final int gpuSharedBytes;
+  final int gpuCommittedBytes;
+  final double gpuPercent;
+  final Map<String, double> gpuEngines;
+  final List<String> gpuRuntimes;
+  final String gpuCategory;
+  final GgufModelInfo? gpuModelInfo;
 
   const ProcessInfo({
     required this.pid,
@@ -41,7 +50,23 @@ class ProcessInfo {
     required this.memoryBytes,
     required this.cpuPercent,
     this.priorityClass = priorityNormal,
+    this.gpuDedicatedBytes = 0,
+    this.gpuSharedBytes = 0,
+    this.gpuCommittedBytes = 0,
+    this.gpuPercent = 0.0,
+    this.gpuEngines = const {},
+    this.gpuRuntimes = const [],
+    this.gpuCategory = '',
+    this.gpuModelInfo,
   });
+
+  int get gpuPagedBytes => max(0, gpuCommittedBytes - gpuDedicatedBytes - gpuSharedBytes);
+
+  String get formattedGpuVram => GpuTaskManService.formatBytes(gpuDedicatedBytes);
+
+  String get formattedGpuShared => GpuTaskManService.formatBytes(gpuSharedBytes);
+
+  String get formattedGpuPaged => GpuTaskManService.formatBytes(gpuPagedBytes);
 
   String get formattedMemory {
     final mb = memoryBytes / (1024 * 1024);
@@ -97,6 +122,7 @@ class SystemMetrics {
   final PowerStatusInfo powerStatus;
   final List<ProcessInfo> processes;
   final ThermalTelemetryInfo thermals;
+  final GpuSnapshot? gpuSnapshot;
 
   const SystemMetrics({
     required this.cpuPercent,
@@ -112,11 +138,13 @@ class SystemMetrics {
     required this.powerStatus,
     required this.processes,
     required this.thermals,
+    this.gpuSnapshot,
   });
 }
 
 class SystemTelemetryService {
   final ThermalTelemetryService _thermalService = ThermalTelemetryService();
+  final GpuTaskManService _gpuService = GpuTaskManService();
   int _prevIdleTime = 0;
   int _prevKernelTime = 0;
   int _prevUserTime = 0;
@@ -315,7 +343,7 @@ class SystemTelemetryService {
 
   List<ProcessInfo> _getRunningProcesses() {
     final list = <ProcessInfo>[];
-    if (!Platform.isWindows) {
+    if (!Platform.isWindows || Platform.environment['FLUTTER_TEST'] == 'true') {
       return _getSimulatedProcesses();
     }
 
@@ -478,11 +506,50 @@ class SystemTelemetryService {
     }
   }
 
-  SystemMetrics collectMetrics() {
+  SystemMetrics collectMetrics({int selectedGpuIndex = 0}) {
     final cpu = _getSystemCpuBreakdown();
     final mem = _getSystemMemoryUsage();
     final power = _getPowerStatus();
-    final procs = _getRunningProcesses();
+    final rawProcs = _getRunningProcesses();
+
+    final processNamesByPid = <int, String>{
+      for (final p in rawProcs) p.pid: p.name,
+    };
+    final gpuSnapshot = _gpuService.sample(
+      selectedAdapterIndex: selectedGpuIndex,
+      processNamesByPid: processNamesByPid,
+    );
+
+    final procs = rawProcs.map((p) {
+      final gpu = gpuSnapshot.processMap[p.pid];
+      if (gpu == null) return p;
+      return ProcessInfo(
+        pid: p.pid,
+        name: p.name,
+        fullPath: p.fullPath,
+        threadCount: p.threadCount,
+        memoryBytes: p.memoryBytes,
+        cpuPercent: p.cpuPercent,
+        priorityClass: p.priorityClass,
+        gpuDedicatedBytes: gpu.dedicatedBytes,
+        gpuSharedBytes: gpu.sharedBytes,
+        gpuCommittedBytes: gpu.committedBytes,
+        gpuPercent: gpu.gpuPercent,
+        gpuEngines: gpu.engines,
+        gpuRuntimes: gpu.runtimes,
+        gpuCategory: gpu.category,
+        gpuModelInfo: gpu.modelInfo,
+      );
+    }).toList();
+
+    if (gpuSnapshot.adapters.isNotEmpty) {
+      final activeIdx = selectedGpuIndex.clamp(0, gpuSnapshot.adapters.length - 1);
+      final activeAdapter = gpuSnapshot.adapters[activeIdx];
+      _thermalService.updateWddmGpuFallback(
+        model: activeAdapter.adapter.name,
+        utilization: activeAdapter.gpuUtilizationPercent,
+      );
+    }
 
     final diskMBs = (0.5 + Random().nextDouble() * 12.0);
     final netKbps = (120.0 + Random().nextDouble() * 850.0);
@@ -505,10 +572,12 @@ class SystemTelemetryService {
       powerStatus: power,
       processes: procs,
       thermals: thermals,
+      gpuSnapshot: gpuSnapshot,
     );
   }
 
   void dispose() {
     _thermalService.dispose();
+    _gpuService.dispose();
   }
 }

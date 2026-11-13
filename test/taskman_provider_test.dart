@@ -78,6 +78,21 @@ void main() {
       provider.setSort(ProcessSortField.pid);
       final sortedByPid = provider.filteredProcesses;
       expect(sortedByPid, isA<List<ProcessInfo>>());
+
+      // Test GPU and VRAM sorting
+      provider.setSort(ProcessSortField.gpu);
+      final sortedByGpu = provider.filteredProcesses;
+      expect(sortedByGpu, isA<List<ProcessInfo>>());
+      if (sortedByGpu.length >= 2) {
+        expect(sortedByGpu.first.gpuPercent >= sortedByGpu.last.gpuPercent, isTrue);
+      }
+
+      provider.setSort(ProcessSortField.vram);
+      final sortedByVram = provider.filteredProcesses;
+      expect(sortedByVram, isA<List<ProcessInfo>>());
+      if (sortedByVram.length >= 2) {
+        expect(sortedByVram.first.gpuDedicatedBytes >= sortedByVram.last.gpuDedicatedBytes, isTrue);
+      }
     });
 
     test('switches skins successfully', () {
@@ -127,7 +142,7 @@ void main() {
       );
 
       final csv = extService.generateTelemetryCsv();
-      expect(csv, contains('Timestamp,CPU_Percent,Memory_Percent,Disk_MBs,Top_Process,Top_Process_CPU'));
+      expect(csv, contains('Timestamp,CPU_Percent,Memory_Percent,Disk_MBs,GPU_Percent,GPU_VRAM_MB,Top_Process,Top_Process_CPU'));
       expect(csv, contains('test_proc.exe'));
 
       final json = extService.generateTelemetryJson();

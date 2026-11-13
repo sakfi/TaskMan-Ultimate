@@ -47,6 +47,12 @@ class _DetailsViewState extends State<DetailsView> {
         case 'memory':
           cmp = a.memoryBytes.compareTo(b.memoryBytes);
           break;
+        case 'vram':
+          cmp = a.gpuDedicatedBytes.compareTo(b.gpuDedicatedBytes);
+          break;
+        case 'gpu':
+          cmp = a.gpuPercent.compareTo(b.gpuPercent);
+          break;
         case 'priority':
           cmp = a.priorityClass.compareTo(b.priorityClass);
           break;
@@ -261,6 +267,8 @@ class _DetailsViewState extends State<DetailsView> {
                   _headerCell('Threads', 'threads', flex: 2, skin: skin),
                   _headerCell('CPU %', 'cpu', flex: 2, skin: skin),
                   _headerCell('Memory', 'memory', flex: 3, skin: skin),
+                  _headerCell('GPU %', 'gpu', flex: 2, skin: skin),
+                  _headerCell('VRAM', 'vram', flex: 2, skin: skin),
                   _headerCell('Architecture', '', flex: 2, skin: skin),
                   _headerCell('Priority', 'priority', flex: 2, skin: skin),
                 ],
@@ -375,6 +383,34 @@ class _DetailsViewState extends State<DetailsView> {
                               child: Text(
                                 proc.formattedMemory,
                                 style: TextStyle(color: skin.textPrimary, fontFamily: 'Consolas', fontSize: 12),
+                              ),
+                            ),
+                            // GPU %
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                proc.gpuPercent > 0 ? '${proc.gpuPercent.toStringAsFixed(1)}%' : '-',
+                                style: TextStyle(
+                                  color: proc.gpuPercent > 5.0
+                                      ? skin.getChannel('gpu').accent
+                                      : skin.textSecondary,
+                                  fontFamily: 'Consolas',
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            // VRAM
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                proc.gpuDedicatedBytes > 0 ? proc.formattedGpuVram : '-',
+                                style: TextStyle(
+                                  color: proc.gpuDedicatedBytes > 0
+                                      ? skin.getChannel('gpu').accent
+                                      : skin.textSecondary,
+                                  fontFamily: 'Consolas',
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                             // Architecture

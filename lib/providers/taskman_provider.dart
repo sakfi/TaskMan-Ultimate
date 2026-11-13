@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
 import '../models/skin_theme.dart';
+import '../services/gpu_taskman_service.dart';
 import '../services/skin_loader_service.dart';
 import '../services/system_extended_service.dart';
 import '../services/system_telemetry_service.dart';
@@ -13,6 +14,8 @@ enum ProcessSortField {
   pid,
   memory,
   threads,
+  gpu,
+  vram,
 }
 
 class TaskManProvider extends ChangeNotifier {
@@ -38,9 +41,29 @@ class TaskManProvider extends ChangeNotifier {
   final List<double> networkHistory = List.filled(60, 0.0, growable: true);
   final List<double> cpuThermalHistory = List.filled(60, 40.0, growable: true);
   final List<double> gpuThermalHistory = List.filled(60, 42.0, growable: true);
+  final List<double> gpuUtilizationHistory = List.filled(60, 0.0, growable: true);
+  final List<double> gpuVramHistory = List.filled(60, 0.0, growable: true);
+  final List<double> gpu3dHistory = List.filled(60, 0.0, growable: true);
+  final List<double> gpuComputeHistory = List.filled(60, 0.0, growable: true);
+  final List<double> gpuCopyHistory = List.filled(60, 0.0, growable: true);
+  final List<double> gpuVideoHistory = List.filled(60, 0.0, growable: true);
 
   // Per-core history buffers
   late final List<List<double>> coreHistories;
+
+  // GPU Inspector state
+  int _selectedGpuIndex = 0;
+  int get selectedGpuIndex => _selectedGpuIndex;
+
+  bool _gpuSlimMode = false;
+  bool get gpuSlimMode => _gpuSlimMode;
+
+  AdapterGpuTelemetry? get activeGpuAdapter {
+    final adapters = _latestMetrics?.gpuSnapshot?.adapters;
+    if (adapters == null || adapters.isEmpty) return null;
+    final idx = _selectedGpuIndex.clamp(0, adapters.length - 1);
+    return adapters[idx];
+  }
 
   // Visual toggles
   bool _showPerCoreCpu = false;
@@ -279,8 +302,19 @@ class TaskManProvider extends ChangeNotifier {
     _fetchMetrics();
   }
 
+  void selectGpuIndex(int index) {
+    if (_selectedGpuIndex == index) return;
+    _selectedGpuIndex = index;
+    _fetchMetrics();
+  }
+
+  void toggleGpuSlimMode() {
+    _gpuSlimMode = !_gpuSlimMode;
+    notifyListeners();
+  }
+
   void _fetchMetrics() {
-    final metrics = _service.collectMetrics();
+    final metrics = _service.collectMetrics(selectedGpuIndex: _selectedGpuIndex);
     _latestMetrics = metrics;
 
     _pushHistory(cpuHistory, metrics.cpuPercent);
@@ -290,6 +324,29 @@ class TaskManProvider extends ChangeNotifier {
     _pushHistory(networkHistory, metrics.networkUsageKbps);
     _pushHistory(cpuThermalHistory, metrics.thermals.cpuTemperature);
     _pushHistory(gpuThermalHistory, metrics.thermals.gpuTemperature);
+
+    final gpuSnap = metrics.gpuSnapshot;
+    if (gpuSnap != null && gpuSnap.adapters.isNotEmpty) {
+      final idx = _selectedGpuIndex.clamp(0, gpuSnap.adapters.length - 1);
+      final active = gpuSnap.adapters[idx];
+      _pushHistory(gpuUtilizationHistory, active.gpuUtilizationPercent);
+      _pushHistory(gpuVramHistory, active.vramUsagePercent);
+      _pushHistory(gpu3dHistory, active.engineUtilization['3d'] ?? 0.0);
+      _pushHistory(gpuComputeHistory, active.engineUtilization['compute'] ?? 0.0);
+      _pushHistory(gpuCopyHistory, active.engineUtilization['copy'] ?? 0.0);
+      final vidMax = [
+        active.engineUtilization['decode'] ?? 0.0,
+        active.engineUtilization['encode'] ?? 0.0,
+      ].reduce((a, b) => a > b ? a : b);
+      _pushHistory(gpuVideoHistory, vidMax);
+    } else {
+      _pushHistory(gpuUtilizationHistory, metrics.thermals.gpuUtilization);
+      _pushHistory(gpuVramHistory, 0.0);
+      _pushHistory(gpu3dHistory, 0.0);
+      _pushHistory(gpuComputeHistory, 0.0);
+      _pushHistory(gpuCopyHistory, 0.0);
+      _pushHistory(gpuVideoHistory, 0.0);
+    }
 
     for (int i = 0; i < metrics.perCoreCpu.length && i < coreHistories.length; i++) {
       _pushHistory(coreHistories[i], metrics.perCoreCpu[i]);
@@ -304,10 +361,13 @@ class TaskManProvider extends ChangeNotifier {
         topProc = metrics.processes.first.name;
         topCpu = metrics.processes.first.cpuPercent;
       }
+      final activeGpu = activeGpuAdapter;
       extService.recordSnapshot(
         cpu: metrics.cpuPercent,
         mem: metrics.memoryPercent,
         disk: metrics.diskUsageMBs,
+        gpu: activeGpu?.gpuUtilizationPercent ?? metrics.thermals.gpuUtilization,
+        gpuVramMB: (activeGpu?.dedicatedUsedBytes ?? 0) / (1024 * 1024),
         topProc: topProc,
         topProcCpu: topCpu,
       );
@@ -453,6 +513,12 @@ class TaskManProvider extends ChangeNotifier {
           break;
         case ProcessSortField.threads:
           cmp = a.threadCount.compareTo(b.threadCount);
+          break;
+        case ProcessSortField.gpu:
+          cmp = a.gpuPercent.compareTo(b.gpuPercent);
+          break;
+        case ProcessSortField.vram:
+          cmp = a.gpuDedicatedBytes.compareTo(b.gpuDedicatedBytes);
           break;
       }
       return _sortAscending ? cmp : -cmp;

@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import '../models/skin_theme.dart';
 import '../providers/taskman_provider.dart';
+import '../services/gpu_taskman_service.dart';
 import '../widgets/segmented_meter.dart';
 import '../widgets/trace_graph.dart';
 
@@ -27,6 +28,11 @@ class _PerformanceViewState extends State<PerformanceView> {
     final diskMBs = metrics?.diskUsageMBs ?? 0.0;
     final netKbps = metrics?.networkUsageKbps ?? 0.0;
     final power = metrics?.powerStatus;
+    final gpuAdapter = provider.activeGpuAdapter;
+    final gpuUtil = gpuAdapter?.gpuUtilizationPercent ?? (metrics?.thermals.gpuUtilization ?? 0.0);
+    final gpuVramPct = gpuAdapter?.vramUsagePercent ?? 0.0;
+    final gpuVramUsed = GpuTaskManService.formatBytes(gpuAdapter?.dedicatedUsedBytes ?? 0);
+    final gpuVramTotal = GpuTaskManService.formatBytes(gpuAdapter?.adapter.dedicatedVramBytes ?? 0);
 
     final totalMemGB = ((metrics?.totalMemoryBytes ?? 0) / (1024 * 1024 * 1024)).toStringAsFixed(1);
     final usedMemGB = ((metrics?.usedMemoryBytes ?? 0) / (1024 * 1024 * 1024)).toStringAsFixed(1);
@@ -100,8 +106,8 @@ class _PerformanceViewState extends State<PerformanceView> {
             child: provider.showPerCoreCpu
                 ? _buildLogicalCoresGrid(provider, skin, showSegmented)
                 : (showSegmented
-                    ? _buildSegmentedGrid(skin, cpuPercent, memPercent, diskMBs, netKbps, usedMemGB, totalMemGB)
-                    : _buildTraceGrid(provider, skin, cpuPercent, kernelPercent, memPercent, diskMBs, netKbps)),
+                    ? _buildSegmentedGrid(skin, cpuPercent, memPercent, diskMBs, netKbps, gpuUtil, gpuVramPct, usedMemGB, totalMemGB, gpuVramUsed, gpuVramTotal)
+                    : _buildTraceGrid(provider, skin, cpuPercent, kernelPercent, memPercent, diskMBs, netKbps, gpuUtil, gpuVramPct, gpuVramUsed, gpuVramTotal)),
           ),
 
           const SizedBox(height: 12),
@@ -119,6 +125,7 @@ class _PerformanceViewState extends State<PerformanceView> {
               children: [
                 _infoTile('RAM In-Use', '$usedMemGB / $totalMemGB GB', skin),
                 _infoTile('RAM Available', '$availMemGB GB', skin),
+                _infoTile('GPU VRAM', gpuAdapter != null ? '$gpuVramUsed / $gpuVramTotal' : 'N/A', skin),
                 _infoTile('Processes', '${metrics?.processes.length ?? 0}', skin),
                 _infoTile('Logical Processors', '${provider.coreCount}', skin),
                 if (power != null)
@@ -204,8 +211,12 @@ class _PerformanceViewState extends State<PerformanceView> {
     double mem,
     double disk,
     double net,
+    double gpuUtil,
+    double gpuVramPct,
     String usedMemGB,
     String totalMemGB,
+    String gpuVramUsed,
+    String gpuVramTotal,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -226,7 +237,7 @@ class _PerformanceViewState extends State<PerformanceView> {
               displayValue: '${cpu.toStringAsFixed(1)}%',
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: SegmentedMeter(
               label: 'MEMORY USAGE',
@@ -236,7 +247,27 @@ class _PerformanceViewState extends State<PerformanceView> {
               displayValue: '${mem.toStringAsFixed(1)}% ($usedMemGB / $totalMemGB GB)',
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
+          Expanded(
+            child: SegmentedMeter(
+              label: 'GPU USAGE',
+              value: gpuUtil,
+              channelColor: skin.getChannel('gpu'),
+              segments: 16,
+              displayValue: '${gpuUtil.toStringAsFixed(1)}%',
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: SegmentedMeter(
+              label: 'GPU VRAM',
+              value: gpuVramPct,
+              channelColor: skin.getChannel('gpu'),
+              segments: 16,
+              displayValue: '$gpuVramUsed / $gpuVramTotal',
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: SegmentedMeter(
               label: 'DISK ACTIVITY',
@@ -246,7 +277,7 @@ class _PerformanceViewState extends State<PerformanceView> {
               displayValue: '${disk.toStringAsFixed(1)} MB/s',
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: SegmentedMeter(
               label: 'NETWORK',
@@ -269,12 +300,16 @@ class _PerformanceViewState extends State<PerformanceView> {
     double mem,
     double disk,
     double net,
+    double gpuUtil,
+    double gpuVramPct,
+    String gpuVramUsed,
+    String gpuVramTotal,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return GridView.count(
-          crossAxisCount: constraints.maxWidth > 700 ? 2 : 1,
-          childAspectRatio: 1.8,
+          crossAxisCount: constraints.maxWidth > 950 ? 3 : (constraints.maxWidth > 620 ? 2 : 1),
+          childAspectRatio: 1.75,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
@@ -291,6 +326,20 @@ class _PerformanceViewState extends State<PerformanceView> {
               currentValText: '${mem.toStringAsFixed(1)}%',
               history: provider.memoryHistory,
               channelColor: skin.getChannel('memory'),
+              maxY: 100.0,
+            ),
+            TraceGraph(
+              title: 'GPU Utilization',
+              currentValText: '${gpuUtil.toStringAsFixed(1)}%',
+              history: provider.gpuUtilizationHistory,
+              channelColor: skin.getChannel('gpu'),
+              maxY: 100.0,
+            ),
+            TraceGraph(
+              title: 'GPU Dedicated VRAM',
+              currentValText: '$gpuVramUsed / $gpuVramTotal (${gpuVramPct.toStringAsFixed(1)}%)',
+              history: provider.gpuVramHistory,
+              channelColor: skin.getChannel('gpu'),
               maxY: 100.0,
             ),
             TraceGraph(

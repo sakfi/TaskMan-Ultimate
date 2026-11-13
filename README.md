@@ -6,7 +6,7 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20(x64)-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com)
 [![Engine](https://img.shields.io/badge/Engine-Flutter%20Desktop%20%2B%20Win32%20FFI-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Status](https://img.shields.io/badge/Tests-13%2F13%20Passing%20(100%25)-00E676?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/sakfi/TaskMan-Ultimate/actions)
+[![Status](https://img.shields.io/badge/Tests-27%2F27%20Passing%20(100%25)-00E676?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/sakfi/TaskMan-Ultimate/actions)
 [![Analysis](https://img.shields.io/badge/Analyzer-0%20Issues-brightgreen?style=for-the-badge&logo=dart)](https://github.com/sakfi/TaskMan-Ultimate)
 [![Release](https://img.shields.io/github/v/release/sakfi/TaskMan-Ultimate?style=for-the-badge&logo=github&color=9C27B0&label=Release)](https://github.com/sakfi/TaskMan-Ultimate/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-FFB300?style=for-the-badge)](https://github.com/sakfi/TaskMan-Ultimate/blob/main/LICENSE)
@@ -38,8 +38,14 @@
 ├──────────────────────────────────┼──────────────────────────────────┼──────────────────────────────────┤
 │ • GeoIP & Cloud Provider Badging │ • Autonomous Hardware Alarms     │ • Rolling 1-Second Black Box Log │
 │ • Active Socket Owner Inspector  │ • Thermal Throttling Alerts (>85)│ • Interactive Timeline Scrubber  │
-│ • Port Service Auto-Discovery    │ • Low RAM Saturation Alerts (>90)│ • Instant CSV & JSON Data Export │
+│ • Port Service Auto-Discovery    │ • Low RAM Saturation Alerts (>90)│ • CSV, JSON & JSONL Data Export  │
 │ • Instant Remote Socket Disconect│ • Sustained CPU Spikes (>95%)    │ • Cyberpunk Skin & HUD Engine    │
+├──────────────────────────────────┼──────────────────────────────────┼──────────────────────────────────┤
+│ 🧠 GPU & AI INSPECTOR            │ 🔍 LOCAL LLM & GGUF TELEMETRY    │ 📐 WDDM MEMORY ACCOUNTING        │
+├──────────────────────────────────┼──────────────────────────────────┼──────────────────────────────────┤
+│ • DXGI + PDH Per-Process VRAM    │ • GGUF Header & KV Cache Parser  │ • Dedicated vs. Shared Spill     │
+│ • 3D/Compute/Copy/Video Engines  │ • Ollama / llama.cpp Log Probing │ • Baseline Capture & Diffing     │
+│ • Runtime DLL Fingerprinting     │ • HF / LM Studio / Ollama Stores │ • Attributed vs. Unattributed    │
 └──────────────────────────────────┴──────────────────────────────────┴──────────────────────────────────┘
 ```
 
@@ -89,14 +95,21 @@
 
 ### 7. 📊 Flight Recorder 2.0 (Black Box Telemetry)
 
-* **Real-Time Rolling Telemetry Buffer**: Logs CPU, Memory, Disk I/O throughput, and culprit spike processes every second.
+* **Real-Time Rolling Telemetry Buffer**: Logs CPU, Memory, GPU %, VRAM, Disk I/O throughput, and culprit spike processes every second.
 * **Interactive Timeline Scrubber**: Rewind and scrub back in time to inspect past hardware crashes or resource spikes.
-* **Export Anywhere**: One-click telemetry dumping to formatted **CSV** and indented **JSON** datasets.
+* **Export Anywhere**: One-click telemetry dumping to formatted **CSV**, indented **JSON**, and streaming **JSONL** datasets.
 
 ### 8. 🎨 Nostalgic & Cyberpunk Skin Engine
 
 * Supports retro Windows Task Manager, Classic Winamp, Traces, Matrix Console, and custom `.tmogskin` themes with customizable fonts, meter styles, and neon palettes.
 * Compact, floating **Mini HUD Mode** for monitoring hardware while gaming or compiling.
+
+### 9. 🧠 WDDM GPU & AI Inspector (`gputaskman` Integration)
+
+* **Zero-Privilege WDDM Per-Process Telemetry**: Uses native `dxgi.dll` adapter enumeration and `pdh.dll` performance counters (`\GPU Process Memory(*)`, `\GPU Engine(*)`, `\GPU Adapter Memory(*)`) to track per-process Dedicated VRAM, Shared Spill, Committed, and Estimated Paged memory plus 3D, Compute/CUDA, Copy/DMA, Video Decode, and Video Encode engine utilization.
+* **Runtime & Category Fingerprinting**: Inspects loaded modules via `K32EnumProcessModulesEx` to tag active GPU/AI runtimes (`CUDA`, `cuDNN`, `llama.cpp`, `ggml`, `PyTorch`, `TensorRT`, `ONNX RT`, `DirectML`, `HIP`, `Vulkan`, `D3D12`, `D3D11`, `NVENC`) and categorize processes (`LLM / AI`, `Browser`, `Compositor`, `Video`, `3D / Game`).
+* **Local GGUF & LLM Load Log Inspector**: Built-in `.gguf` v1/v2/v3 binary header parser estimates Weights vs. KV Cache vs. Compute buffers, probes `%LOCALAPPDATA%\Ollama\server.log` for live buffer allocations, and resolves friendly model names from Hugging Face, LM Studio, and Ollama stores.
+* **GPU Snapshot Diffing**: Capture a baseline snapshot and diff live VRAM attribution after loading or unloading AI models or games, with a 16 MB WDDM noise filter.
 
 ---
 
@@ -108,6 +121,7 @@ flowchart TD
         SV[Summary View]
         PV[Processes View]
         DV[Details View]
+        GI[GPU & AI Inspector]
         NV[Network Intelligence]
         FR[Flight Recorder 2.0]
         TH[Thermals & Dynamic Sensors]
@@ -123,6 +137,7 @@ flowchart TD
 
     subgraph NativeServices ["⚙️ Native Windows FFI & Telemetry Services"]
         STS[SystemTelemetryService]
+        GTS[GpuTaskManService\nWDDM PDH + DXGI + GGUF]
         TTS[ThermalTelemetryService\nDynamic Hardware Prober]
         SES[SystemExtendedService]
     end
@@ -131,9 +146,10 @@ flowchart TD
         MUTEX[Win32 Named Mutex\nGlobal Single-Instance Guard]
         IFEO[HKLM IFEO Registry\ntaskmgr.exe Debugger Hook]
         REG[HKLM CentralProcessor\nHardware Description Prober]
-        K32[kernel32.dll\nGetProcessAffinityMask\nSetProcessAffinityMask]
+        DXGI[dxgi.dll\nIDXGIFactory1 Adapter Prober]
+        K32[kernel32.dll\nAffinity & K32EnumModulesEx]
         PSAPI[psapi.dll\nEmptyWorkingSet\nEnumProcesses]
-        PDH[pdh.dll / WMI\nPerformance Counters]
+        PDH[pdh.dll / WMI\nWDDM GPU & Performance Counters]
         POW[powercfg.exe\nActive Power Schemes]
         SEC[Authenticode API\nGet-AuthenticodeSignature]
     end
@@ -142,12 +158,16 @@ flowchart TD
     TMP --> SG
     TMP --> SLS
     TMP --> STS
+    STS --> GTS
     TMP --> TTS
     TMP --> SES
 
     TMP --> MUTEX
     SES --> IFEO
     TTS --> REG
+    GTS --> DXGI
+    GTS --> PDH
+    GTS --> K32
     SES --> K32
     SES --> PSAPI
     SES --> POW
@@ -231,13 +251,13 @@ TaskMan Ultimate includes a fully automated GitHub Actions pipeline (`.github/wo
 
 TaskMan Ultimate maintains 100% test pass rates and zero analyzer issues:
 
-* **13 / 13 Unit and Widget Tests Passing**: Validates skin parsing, hex color conversions, state providers, anomaly alerts, sorting/filtering, and UI components.
+* **27 / 27 Unit and Widget Tests Passing**: Validates WDDM PDH/DXGI GPU parsing, GGUF header & LLM log probing, snapshot diffing, skin parsing, state providers, anomaly alerts, sorting/filtering, and UI components.
 * **0 Analysis Issues**: Clean output with `dart analyze`.
 * **Zero Memory / Handle Leaks**: Proper disposal of telemetry stream subscriptions and Win32 handles.
 
 ```powershell
 flutter test
-# Output: All tests passed! (13/13)
+# Output: All tests passed! (27/27)
 
 dart analyze
 # Output: No issues found!

@@ -230,6 +230,8 @@ class FlightRecorderSnapshot {
   final double cpuPercent;
   final double memoryPercent;
   final double diskMBs;
+  final double gpuPercent;
+  final double gpuVramMB;
   final String topProcessName;
   final double topProcessCpu;
 
@@ -238,6 +240,8 @@ class FlightRecorderSnapshot {
     required this.cpuPercent,
     required this.memoryPercent,
     required this.diskMBs,
+    this.gpuPercent = 0.0,
+    this.gpuVramMB = 0.0,
     required this.topProcessName,
     required this.topProcessCpu,
   });
@@ -247,6 +251,8 @@ class FlightRecorderSnapshot {
     'cpuPercent': cpuPercent,
     'memoryPercent': memoryPercent,
     'diskMBs': diskMBs,
+    'gpuPercent': gpuPercent,
+    'gpuVramMB': gpuVramMB,
     'topProcessName': topProcessName,
     'topProcessCpu': topProcessCpu,
   };
@@ -280,6 +286,8 @@ class SystemExtendedService {
     required double cpu,
     required double mem,
     required double disk,
+    double gpu = 0.0,
+    double gpuVramMB = 0.0,
     required String topProc,
     required double topProcCpu,
   }) {
@@ -294,6 +302,8 @@ class SystemExtendedService {
         cpuPercent: cpu,
         memoryPercent: mem,
         diskMBs: disk,
+        gpuPercent: gpu,
+        gpuVramMB: gpuVramMB,
         topProcessName: topProc,
         topProcessCpu: topProcCpu,
       ),
@@ -1129,10 +1139,14 @@ class SystemExtendedService {
   /// Exports Flight Recorder telemetry logs to CSV format
   String generateTelemetryCsv() {
     final sb = StringBuffer();
-    sb.writeln('Timestamp,CPU_Percent,Memory_Percent,Disk_MBs,Top_Process,Top_Process_CPU');
+    sb.writeln('Timestamp,CPU_Percent,Memory_Percent,Disk_MBs,GPU_Percent,GPU_VRAM_MB,Top_Process,Top_Process_CPU');
     for (final snap in flightRecorderLogs) {
       final timeStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(snap.timestamp);
-      sb.writeln('$timeStr,${snap.cpuPercent},${snap.memoryPercent},${snap.diskMBs},"${snap.topProcessName}",${snap.topProcessCpu}');
+      sb.writeln(
+        '$timeStr,${snap.cpuPercent},${snap.memoryPercent},${snap.diskMBs},'
+        '${snap.gpuPercent.toStringAsFixed(1)},${snap.gpuVramMB.toStringAsFixed(1)},'
+        '"${snap.topProcessName}",${snap.topProcessCpu}',
+      );
     }
     return sb.toString();
   }
@@ -1142,5 +1156,12 @@ class SystemExtendedService {
     return const JsonEncoder.withIndent('  ').convert(
       flightRecorderLogs.map((s) => s.toJson()).toList(),
     );
+  }
+
+  /// Exports Flight Recorder telemetry logs to JSONL (one JSON record per line,
+  /// compatible with `gputaskman record`).
+  String generateTelemetryJsonl() {
+    if (flightRecorderLogs.isEmpty) return '';
+    return '${flightRecorderLogs.map((s) => jsonEncode(s.toJson())).join('\n')}\n';
   }
 }

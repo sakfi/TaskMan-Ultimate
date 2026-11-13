@@ -310,6 +310,34 @@ class ProcessesView extends StatelessWidget {
               ),
               Expanded(
                 flex: 2,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => provider.setSort(ProcessSortField.vram),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('VRAM', style: _headerStyle(skin)),
+                      _sortIcon(provider, ProcessSortField.vram),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => provider.setSort(ProcessSortField.gpu),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('GPU %', style: _headerStyle(skin)),
+                      _sortIcon(provider, ProcessSortField.gpu),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -414,6 +442,37 @@ class ProcessesView extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            // VRAM (WDDM Local Usage)
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                proc.gpuDedicatedBytes > 0 ? proc.formattedGpuVram : '-',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'Consolas',
+                                  color: proc.gpuDedicatedBytes > 0
+                                      ? skin.getChannel('gpu').accent
+                                      : skin.textSecondary,
+                                ),
+                              ),
+                            ),
+                            // GPU %
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                proc.gpuPercent > 0 ? '${proc.gpuPercent.toStringAsFixed(1)}%' : '-',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'Consolas',
+                                  fontWeight: proc.gpuPercent > 5.0 ? FontWeight.bold : FontWeight.normal,
+                                  color: proc.gpuPercent > 5.0
+                                      ? skin.getChannel('gpu').accent
+                                      : skin.textSecondary,
+                                ),
+                              ),
+                            ),
                             // Priority
                             Expanded(
                               flex: 2,
@@ -460,9 +519,30 @@ class ProcessesView extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'RAM: ${selectedProc.formattedMemory}  |  Priority: ${selectedProc.priorityName}',
+                  'RAM: ${selectedProc.formattedMemory}  |  VRAM: ${selectedProc.formattedGpuVram}  |  GPU: ${selectedProc.gpuPercent.toStringAsFixed(1)}%  |  Priority: ${selectedProc.priorityName}',
                   style: TextStyle(fontSize: 11, color: skin.textSecondary),
                 ),
+                if (selectedProc.gpuRuntimes.isNotEmpty) ...[
+                  const SizedBox(width: 10),
+                  ...selectedProc.gpuRuntimes.take(3).map(
+                        (rt) => Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: skin.getChannel('gpu').accent.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            rt,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: skin.getChannel('gpu').accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                ],
                 if (selectedProc.fullPath.isNotEmpty) ...[
                   const SizedBox(width: 12),
                   Expanded(
